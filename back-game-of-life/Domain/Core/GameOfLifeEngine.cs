@@ -66,6 +66,7 @@ namespace Domain.Core
                         nextLiveCells.Add(cell);
                     }
                 }
+                var patternHash = CycleDetector.ComputePatternHash(nextLiveCells);
             }
 
             return nextLiveCells;
@@ -74,10 +75,15 @@ namespace Domain.Core
 
         public static HashSet<Coords> CalculateNGerations(HashSet<Coords> initialCells, int X)
         {
+            var detector = new CycleDetector();
             var currentCells = initialCells;
             for (int i = 0; i < X; i++)
             {
-                // Llama repetidamente al método núcleo.
+                if(detector.HasCycle(currentCells))
+                {
+                    // Cycle detected, break early
+                    break;
+                }
                 currentCells = CalculateNextGeneration(currentCells);
             }
             return currentCells;

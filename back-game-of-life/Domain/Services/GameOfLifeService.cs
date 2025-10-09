@@ -30,9 +30,9 @@ namespace Domain.Services
 
             OperationValidations(currentBoard, numGenerations);
             // Excecute in a background thread to avoid blocking
-            var finalLiveCellsHashSet = await Task.Run(() =>
-                GameOfLifeEngine.CalculateNGerations(currentBoard.LiveCells.ToHashSet(), numGenerations)
-            );
+            var finalLiveCellsHashSet =
+                GameOfLifeEngine.CalculateNGerations(currentBoard.LiveCells.ToHashSet(), numGenerations);
+           
 
             var finalBoardState = new GameOfLife
             {
