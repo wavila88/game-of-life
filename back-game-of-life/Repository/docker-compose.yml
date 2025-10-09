@@ -1,0 +1,13 @@
+# Create a Docker Compose file to set up a Redis service
+services:
+  redis:
+    image: redis:latest
+    container_name: redis-db
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-data:

@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: front-game-of-life:v1.0
+    ports:
+      - "3000:80"
