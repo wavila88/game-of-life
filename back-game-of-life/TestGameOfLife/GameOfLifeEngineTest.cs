@@ -1,8 +1,10 @@
 ﻿using Domain.Core;
 using Domain.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace TestProject1
+namespace TestGameOfLife
 {
     [TestClass]
     public sealed class GameOfLifeEngineTest
@@ -140,7 +142,7 @@ namespace TestProject1
             };
 
             // ACT: Advance 4 generations (a glider returns to its shape shifted diagonally)
-           var nextGen = GameOfLifeEngine.CalculateNGerations(initialCells, 4);
+           var gameOfLifeState = GameOfLifeEngine.CalculateNGerations(initialCells, 4);
 
             // Expected state after 4 generations (shifted diagonally)
             // [ ] [ ] [ ]
@@ -157,8 +159,8 @@ namespace TestProject1
             };
 
             // Assert: The glider has moved diagonally
-            Assert.AreEqual(expectedCells.Count, nextGen.Count);
-            Assert.IsTrue(expectedCells.SetEquals(nextGen), "The glider did not move as expected.");
+            Assert.AreEqual(expectedCells.Count, gameOfLifeState.LiveCells.Count);
+            Assert.IsTrue(expectedCells.SetEquals(gameOfLifeState.LiveCells), "The glider did not move as expected.");
         }
 
         [TestMethod]
@@ -205,5 +207,134 @@ namespace TestProject1
             // Final Check: Verify that the actual set matches the expected set of coordinates.
             Assert.IsTrue(expectedCells.SetEquals(nextGeneration), "El patrón del Toad no se transformó correctamente a G1.");
         }
+
+        [TestMethod]
+        public void CalculateNGerations_DetectsCycle_Blinker()
+        {
+            // Initial state: The Blinker (vertical, period 2 oscillator)
+            // [ ] [X] [ ]   (1,0)
+            // [ ] [X] [ ]   (1,1)
+            // [ ] [X] [ ]   (1,2)
+            //
+            // Next generation (horizontal):
+            // [ ] [ ] [ ]
+            // [X] [X] [X]   (0,1), (1,1), (2,1)
+            // [ ] [ ] [ ]
+            var initialCells = new HashSet<Coords>
+            {
+                new Coords(1, 0),
+                new Coords(1, 1),
+                new Coords(1, 2)
+            };
+
+            // Act
+            var result = GameOfLifeEngine.CalculateNGerations(initialCells, 10);
+
+            // Assert
+            Assert.IsTrue(result.isCycleDetected, "Cycle should be detected for Blinker pattern.");
+            Assert.IsTrue(result.Generation > 0, "Cycle should be detected before all generations are completed.");
+            Assert.IsTrue(result.LiveCells.Any(), "There should be live cells in the cycle.");
+        }
+
+        [TestMethod]
+        public void CalculateNGerations_DetectsCycle_Toad()
+        {
+            // Initial state: The Toad (period 2 oscillator)
+            // [ ] [ ] [ ] [ ] [ ] [ ]
+            // [ ] [ ] [X] [X] [X] [ ]
+            // [ ] [X] [X] [X] [ ] [ ]
+            // [ ] [ ] [ ] [ ] [ ] [ ]
+            //
+            // After one generation:
+            // [ ] [ ] [ ] [X] [ ] [ ]
+            // [ ] [X] [ ] [ ] [X] [ ]
+            // [ ] [X] [ ] [ ] [X] [ ]
+            // [ ] [ ] [X] [ ] [ ] [ ]
+            //
+            var initialCells = new HashSet<Coords>
+            {
+                new Coords(2, 1), new Coords(3, 1), new Coords(4, 1),
+                new Coords(1, 2), new Coords(2, 2), new Coords(3, 2)
+            };
+
+            // Act
+            var result = GameOfLifeEngine.CalculateNGerations(initialCells, 10);
+
+            // Assert
+            Assert.IsTrue(result.isCycleDetected, "Cycle should be detected for Toad pattern.");
+            Assert.IsTrue(result.Generation > 0, "Cycle should be detected before all generations are completed.");
+            Assert.IsTrue(result.LiveCells.Any(), "There should be live cells in the cycle.");
+        }
+
+        [TestMethod]
+        public void CalculateNGerations_DetectsCycle_Beacon()
+        {
+            // Initial state: Beacon (period 2 oscillator)
+            // [X][X][ ][ ]
+            // [X][X][ ][ ]
+            // [ ][ ][X][X]
+            // [ ][ ][X][X]
+            // Second generation (after one step):
+            // [X][X][ ][ ]
+            // [X][ ][ ][ ]
+            // [ ][ ][ ][X]
+            // [ ][ ][X][X]
+            var initialCells = new HashSet<Coords>
+            {
+                new Coords(0,0), new Coords(1,0),
+                new Coords(0,1), new Coords(1,1),
+                new Coords(2,2), new Coords(3,2),
+                new Coords(2,3), new Coords(3,3)
+            };
+
+            // Act
+            var result = GameOfLifeEngine.CalculateNGerations(initialCells, 10);
+
+            // Assert
+            Assert.IsTrue(result.isCycleDetected, "Cycle should be detected for Beacon pattern.");
+            Assert.IsTrue(result.Generation > 0, "Cycle should be detected before all generations are completed.");
+            Assert.IsTrue(result.LiveCells.Any(), "There should be live cells in the cycle.");
+        }
+
+        //EXTREME TESTS
+        [TestMethod]
+        public void ExtremeDuplicateCoordinates_ShouldBeHandledGracefully()
+        {
+            // ARRANGE: Two identical coordinates (0,0) and (0,0)
+            var initialCells = new HashSet<Coords>
+            {
+                new Coords(0, 0),
+                new Coords(0, 0) // Duplicate
+            };
+
+            // ACT: Calculate the next generation
+            var nextGeneration = GameOfLifeEngine.CalculateNextGeneration(initialCells);
+
+            // ASSERT: The result should be the same as for a single cell (should die due to underpopulation)
+            Assert.AreEqual(0, nextGeneration.Count, "Duplicate coordinates should not affect the result.");
+        }
+
+        [TestMethod]
+        public void ExtremeCoordinates_ShouldNotThrow()
+        {
+            // ARRANGE: Coordinates with extreme integer values
+            var initialCells = new HashSet<Coords>
+            {
+                new Coords(int.MaxValue, int.MaxValue),
+                new Coords(int.MinValue, int.MinValue)
+            };
+
+            // ACT & ASSERT: Should not throw any exception
+            try
+            {
+                var nextGeneration = GameOfLifeEngine.CalculateNextGeneration(initialCells);
+                Assert.IsNotNull(nextGeneration, "Engine should handle extreme coordinate values.");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Engine threw an exception for extreme coordinates: {ex}");
+            }
+        }
+
     }
 }

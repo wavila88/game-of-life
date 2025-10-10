@@ -1,0 +1,19 @@
+.gol-board {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+.gol-row {
+  display: flex;
+}
+.gol-cell {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #bbb;
+  background: #f0f0f0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.gol-cell-alive {
+  background: #1976d2;
+}

@@ -14,6 +14,6 @@ namespace Domain.Services
         /// </summary>
         Task<GameOfLife> SaveGameOfLife(GameOfLife gameOfLife);
 
-        Task<GameOfLife> GetNGerationsStateAsync(Guid boardId, int x);
+        Task<GameOfLife> GetNGerationsStateAsync(Guid boardId, int x, List<Coords> LiveCells);
     }
 }

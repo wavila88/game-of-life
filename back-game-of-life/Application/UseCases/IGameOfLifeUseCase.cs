@@ -22,6 +22,6 @@ namespace Application.UseCases
         /// <summary>
         /// Gets the state of a GameOfLife board after a number of generations.
         /// </summary>
-        public Task<GameOfLife> NextGenerations(Guid id, int generations);
+        public Task<GameOfLife> NextGenerations(Guid id, int generations, List<Coords> LiveCells);
     }
 }

@@ -31,9 +31,9 @@ namespace Application.UseCases
             return await _repository.GetState(id);
         }
 
-        public async Task<GameOfLife> NextGenerations(Guid id, int generations)
+        public async Task<GameOfLife> NextGenerations(Guid id, int generations, List<Coords> LiveCells)
         {
-            return await _service.GetNGerationsStateAsync(id, generations);
+            return await _service.GetNGerationsStateAsync(id, generations, LiveCells);
         }
     }
 }

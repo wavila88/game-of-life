@@ -1,7 +1,7 @@
 ﻿using Api.DTO;
 using Microsoft.AspNetCore.Mvc;
-using Api.Controllers;
 using Application.UseCases;
+using Domain.Models;
 
 namespace Api.Controllers
 {
@@ -33,23 +33,28 @@ namespace Api.Controllers
             {
                 if (initialState == null || !initialState.Any())
                 {
-                    return BadRequest("Initial state cannot be empty");
+                    return BadRequest(new ApiResponseDTO<object>(false, "Initial state cannot be empty"));
                 }
 
-                var gameOfLife = new Domain.Models.GameOfLife
+                var gameOfLife = new GameOfLife
                 {
                     LiveCells = initialState.Select(c => new Domain.Models.Coords(c.X, c.Y)).ToList(),
                 };
 
                 var gameOfLifeResult = await _gameOfLifeUseCase.SaveGameOfLife(gameOfLife);
-
-                // returns a new object with the ID and initial state
-                return StatusCode(201, gameOfLifeResult);
+                //Implement Graceful Degradation in the event of failure.
+                return StatusCode(201, new ApiResponseDTO<GameOfLife>(true, "Board created", gameOfLifeResult));
+            }
+            catch (InvalidOperationException ex)
+            {
+                // This returns Validation errors like "Cel is out of allowed range"
+                return StatusCode(409, new ApiResponseDTO<object>(false, ex.Message));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception in CreateNewBoard");
-                return StatusCode(500, "An unexpected error occurred.");
+                //Implement Graceful Degradation in the event of failure.
+                return StatusCode(500, new ApiResponseDTO<object>(false, "An unexpected error occurred."));
             }
         }
 
@@ -63,38 +68,46 @@ namespace Api.Controllers
                 var board = await _gameOfLifeUseCase.GetState(boardId);
                 if (board == null)
                 {
-                    return NotFound($"No board found with Id {boardId}.");
+                    return NotFound(new ApiResponseDTO<object>(false, $"No board found with Id {boardId}."));
                 }
-                return Ok(board);
+                return Ok(new ApiResponseDTO<GameOfLife>(true, null, board));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception in GetBoard for boardId {BoardId}", boardId);
-                return StatusCode(500, "An unexpected error occurred.");
+                //Implement Graceful Degradation in the event of failure.
+                return StatusCode(500, new ApiResponseDTO<object>(false, "An unexpected error occurred."));
             }
         }
 
-        [HttpGet("boards/{boardId}/next/{generations}")]
+        [HttpPost("boards/next")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> GetNextGenerations(Guid boardId, int generations)
+        public async Task<IActionResult> GetNextGenerations([FromBody] NextGenerationsRequestDTO request)
         {
             try
             {
-                var board = await _gameOfLifeUseCase.NextGenerations(boardId, generations);
+                var board = await _gameOfLifeUseCase.NextGenerations(request.BoardId, request.Generations, request.LiveCells);
+
                 if (board == null)
-                    return NotFound($"No board found with Id {boardId}.");
-                return Ok(board);
+                {
+                    return NotFound(new ApiResponseDTO<object>(false, $"No board found with Id {request.BoardId}."));
+                }
+                if (board.isCycleDetected)
+                {
+                    return Ok(new ApiResponseDTO<GameOfLife>(true, $"Cycle detected at generation {board.Generation}.", board));
+                }
+                return Ok(new ApiResponseDTO<GameOfLife>(true, null, board));
             }
             catch (InvalidOperationException ex)
             {
-                return StatusCode(409, ex.Message);
+                return StatusCode(409, new ApiResponseDTO<object>(false, ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception in GetNextGenerations for boardId {BoardId} and generations {Generations}", boardId, generations);
-                return StatusCode(500, "An unexpected error occurred.");
+                _logger.LogError(ex, "Unhandled exception in GetNextGenerations for boardId {BoardId} and generations {Generations}", request.BoardId, request.Generations);
+                return StatusCode(500, new ApiResponseDTO<object>(false, "An unexpected error occurred."));
             }
         }
 

@@ -10,8 +10,8 @@ namespace Domain.Core
     public static class GameOfLifeEngine
     {
         /// <summary>
-        /// Calculates the next generation by applying Conway's rules.
-        /// Uses sparse logic (O(k)) for scalability.
+        /// Calculates the next generation by applying` Conway's rules.
+        /// Uses sparse logic for scalability.
         /// </summary>
         /// <param name="currentLiveCells">The current HashSet of live cells.</param>
         /// <returns>The new HashSet of live cells for the next generation.</returns>
@@ -72,53 +72,80 @@ namespace Domain.Core
             return nextLiveCells;
         }
 
-
-        public static HashSet<Coords> CalculateNGerations(HashSet<Coords> initialCells, int X)
+        /*
+         * Time Complexity: O(X * k)
+         * Space Complexity: O(k)
+         * Where X = number of generations, k = average number of live cells per generation.
+         * If you have 100 generations (X = 100) and 50 live cells (k = 50) per generation,
+         * the complexity is about O(100 * 50) = O(5000) operations.
+         */
+        /// <summary>
+        /// Calculates the state of the board after X generations, with cycle detection.
+        /// </summary>
+        public static GameOfLife CalculateNGerations(HashSet<Coords> initialCells, int X)
         {
             var detector = new CycleDetector();
             var currentCells = initialCells;
+            bool cycleDetected = false;
+            int cycleGeneration = 0;
             for (int i = 0; i < X; i++)
             {
                 if(detector.HasCycle(currentCells))
                 {
-                    // Cycle detected, break early
+                    cycleDetected = true;
+                    cycleGeneration = i;
                     break;
                 }
                 currentCells = CalculateNextGeneration(currentCells);
             }
-            return currentCells;
+            return new GameOfLife()
+            { 
+                LiveCells = currentCells.ToList(),
+                isCycleDetected = cycleDetected,
+                Generation = cycleGeneration +1
+            };
         }
 
-
-        // get the 8 Neighbors
+        /*
+         * Time Complexity: O(1) (since it always yields 8 neighbors)
+         * Space Complexity: O(1)
+         */
+        /// <summary>
+        /// Returns the 8 neighbors of a cell.
+        /// </summary>
         private static IEnumerable<Coords> GetNeighbors(Coords cell)
         {
-            for (int xOffset = -1; xOffset <= 1; xOffset++) // Bucle exterior
+            for (int xOffset = -1; xOffset <= 1; xOffset++) // Outer loop
             {
-                for (int yOffset = -1; yOffset <= 1; yOffset++) // Bucle interior
+                for (int yOffset = -1; yOffset <= 1; yOffset++) // Inner loop
                 {
                     if (xOffset == 0 && yOffset == 0) continue;
 
-                    // EL PUNTO DE CONTROL CLAVE: Asegúrate que X y Y están correctos
                     yield return new Coords(cell.X + xOffset, cell.Y + yOffset);
                 }
             }
         }
 
-        // Método auxiliar para contar vecinos vivos (clave para la eficiencia)
+        /*
+         * Time Complexity: O(1) (since there are always 8 neighbors, and HashSet.Contains is O(1) average)
+         * Space Complexity: O(1)
+         */
+        /// <summary>
+        /// Counts the number of live neighbors for a given cell.
+        /// </summary>
         private static int CountLiveNeighbors(Coords cell, HashSet<Coords> liveCells)
-    {
-        int count = 0;
-        foreach (var neighbor in GetNeighbors(cell))
         {
-            // Usar 'Contains' en un HashSet es una operación O(1) promedio,
-            // lo que hace que el conteo de vecinos sea muy rápido.
-            if (liveCells.Contains(neighbor))
+            int count = 0;
+            foreach (var neighbor in GetNeighbors(cell))
             {
-                count++;
+                // Using 'Contains' on a HashSet is O(1) on average,
+                // making neighbor counting very fast.
+                if (liveCells.Contains(neighbor))
+                {
+                    count++;
+                }
             }
+            return count;
         }
-        return count;
-    }
     }
 }

@@ -20,6 +20,9 @@ namespace Domain.Models
 
         // Requirement: Pattern fingerprint, essential for cycle detection
         public string PatternHash { get; set; } = string.Empty;
+
+        //Require for cycle detection
+        public bool isCycleDetected { get; set; } = false;
     }
 
     public record struct Coords(int X, int Y);

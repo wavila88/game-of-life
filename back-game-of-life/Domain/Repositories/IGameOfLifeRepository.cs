@@ -29,5 +29,10 @@ namespace Domain.Repositories
         /// Updates an existing GameOfLife board. Throws if the Id does not exist.
         /// </summary>
         Task<GameOfLife?> Update(GameOfLife gameOfLife);
+
+        /// <summary>
+        /// UGets the state of a GameOfLife board by patternHash.
+        /// </summary>
+        Task<GameOfLife?> GetByPatternHash(string patternHash);
     }
 }

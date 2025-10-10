@@ -15,11 +15,26 @@ builder.Services.AddScoped<IGameOfLifeService, GameOfLifeService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
+//Habilitate CORS
+app.UseCors("AllowFrontend");
 
 //app.UseHttpsRedirection();
 app.UseAuthorization();
