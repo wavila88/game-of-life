@@ -1,13 +1,22 @@
-import React from 'react';
-import type { Coords, GameOfLifeState, RequestNextGenerations } from './types';
+import React, { use, useEffect } from 'react';
+import TextField from '@mui/material/TextField';
+import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
+import SearchIcon from '@mui/icons-material/Search';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import PauseIcon from '@mui/icons-material/Pause';
+import type { GameOfLifeState, RequestNextGenerations, Coords } from './types';
+import type { GameOfLife } from './GameOfLifeContainer/apiCalls/types';
+
 
 interface OperationsProps {
   autoMode: boolean;
   onNextGen: (request: RequestNextGenerations) => void;
   onToggleAuto: () => void;
-  aliveCells: Coords[];
-  setAliveCells: React.Dispatch<React.SetStateAction<Coords[]>>;
+  aliveCells: Set<string>;
   gameOfLifeState: GameOfLifeState;
+  gameOfLife: GameOfLife | null;
   setGameOfLifeState: React.Dispatch<React.SetStateAction<GameOfLifeState>>;
 }
 
@@ -16,12 +25,12 @@ const Operations: React.FC<OperationsProps> = ({
   onNextGen,
   onToggleAuto,
   aliveCells,
-  setAliveCells,
   gameOfLifeState,
+  gameOfLife,
   setGameOfLifeState,
 }) => {
  
- 
+  const [searchBoardId, setSearchBoardId] = React.useState<string>('');
 
   const handleGenerationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setGameOfLifeState(prev => ({
@@ -30,47 +39,104 @@ const Operations: React.FC<OperationsProps> = ({
     }));
   };
 
+  /** Update the searchBoardId when gameOfLife changes */
+  useEffect(() => { 
+    setSearchBoardId(gameOfLife?.id || '');
+  }, [gameOfLife]);
+
+  // Convert Set<string> to Coords[] for API
+  const setToCoordsArray = (set: Set<string>): Coords[] => {
+    return Array.from(set).map((s) => {
+      const [x, y] = s.split(',').map(Number);
+      return { x, y };
+    });
+  };
+
   const handleNextGen = () => {
     onNextGen({
-      initialState: aliveCells,
+      initialState: setToCoordsArray(aliveCells),
       generations: gameOfLifeState.currentGeneration,
       expectedGeneration: gameOfLifeState.expectedGeneration,
     });
-  }
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-    
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-        <div>
+  
+    <Grid container spacing={2} alignItems={"center"}>
+         {/* BoardId input and search button */}
+          <Grid container size={12}>
+          <TextField
+            id="boardIdInput"
+            label="BoardId"
+            variant="outlined"
+            size="small"
+            value={searchBoardId}
+            onChange={(e) => setSearchBoardId(e.target.value)}
+            placeholder="Enter BoardId"
+            disabled={gameOfLife !== null}
+            sx={{
+              width: 280,
+              color: gameOfLife !== null ? '#888' : undefined,
+            }}
+          />
+          <IconButton color="primary" aria-label="search board" size="large">
+            <SearchIcon />
+          </IconButton>
+        </Grid>
+       <Grid container size={12}>
+        <Grid itemType='div'>
           <label>
             Next state (x generations):
-            <input
+            <TextField
               type="number"
-              min={1}
+              size="small"
               value={gameOfLifeState.expectedGeneration}
               onChange={handleGenerationsChange}
-              style={{ width: 60, marginLeft: 8 }}
+              variant="outlined"
+              sx={{ width: 90, marginLeft: 1, marginRight: 1 }}
             />
           </label>
-          <button onClick={handleNextGen} style={{ marginLeft: 8 }}>
-            Next
-          </button>
-        </div>
-        <div>
-          <button onClick={onToggleAuto} style={{ fontSize: 20, padding: '4px 12px' }}>
-            {autoMode ? '⏸️' : '▶️'}
-          </button>
+          <IconButton onClick={handleNextGen} color="primary" aria-label="next state" size="large">
+            <PlayArrowIcon />
+          </IconButton>
+        </Grid>
+         <Grid itemType='div'>
+          <IconButton
+            color="primary"
+            aria-label="refresh"
+            onClick={() => window.location.reload()}
+            size="large"
+            sx={{ marginRight: 2 }}
+          >
+            <RefreshIcon />
+          </IconButton>
+          <span style={{ marginLeft: 8, marginRight: 16 }}>
+            Refresh
+          </span>
+          <IconButton
+            color={autoMode ? 'secondary' : 'primary'}
+            aria-label={autoMode ? 'pause' : 'auto'}
+            onClick={onToggleAuto}
+            size="large"
+          >
+            {autoMode ? <PauseIcon /> : <PlayArrowIcon />}
+          </IconButton>
           <span style={{ marginLeft: 8 }}>
             Constant Advance (Auto Mode)
           </span>
-        </div>
-      </div>
-        <div style={{ display: 'flex', gap: '2rem', marginBottom: 4 }}>
-        <h3>Generation: <b>{gameOfLifeState.currentGeneration}</b></h3>
-        <h3>Population: <b>{aliveCells.length}</b></h3>
-      </div>
-    </div>
+        </Grid>
+      </Grid>
+     
+      <Grid container size={12}>
+        <Grid itemType='div'>
+          <h3 style={{ margin: 0 }}>Generation: <b>{gameOfLifeState.currentGeneration}</b></h3>
+        </Grid>
+        <Grid itemType='div'>
+          <h3 style={{ margin: 0 }}>Population: <b>{aliveCells.size}</b></h3>
+        </Grid>
+      </Grid>
+    </Grid>
+
   );
 };
 
