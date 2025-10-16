@@ -1,6 +1,7 @@
 import './App.css'
-import GameOfLifeContainer from './components/GameOfLifeContainer/GameOfLifeContainer'
+
 import { QueryClientProvider, QueryClient} from '@tanstack/react-query'
+import GameOfLifeContainer from './features/gameOfLife/components/gameOfLifeContainer/GameOfLifeContainer';
 function App() {
   
 const queryClient = new QueryClient();

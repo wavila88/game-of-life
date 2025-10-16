@@ -1,4 +1,4 @@
-import React, { use, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
@@ -6,8 +6,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PauseIcon from '@mui/icons-material/Pause';
-import type { GameOfLifeState, RequestNextGenerations, Coords } from './types';
-import type { GameOfLife } from './GameOfLifeContainer/apiCalls/types';
+import type { GameOfLifeState, RequestNextGenerations, Coords, GameOfLife } from '../types';
+
 
 
 interface OperationsProps {
@@ -17,6 +17,7 @@ interface OperationsProps {
   aliveCells: Set<string>;
   gameOfLifeState: GameOfLifeState;
   gameOfLife: GameOfLife | null;
+  handleSearchBoard: (boardId: string) => void;
   setGameOfLifeState: React.Dispatch<React.SetStateAction<GameOfLifeState>>;
 }
 
@@ -27,6 +28,7 @@ const Operations: React.FC<OperationsProps> = ({
   aliveCells,
   gameOfLifeState,
   gameOfLife,
+  handleSearchBoard,
   setGameOfLifeState,
 }) => {
  
@@ -80,7 +82,7 @@ const Operations: React.FC<OperationsProps> = ({
             }}
           />
           <IconButton color="primary" aria-label="search board" size="large">
-            <SearchIcon />
+            <SearchIcon onClick={() => handleSearchBoard(searchBoardId)} />
           </IconButton>
         </Grid>
        <Grid container size={12}>

@@ -1,5 +1,4 @@
 
-import type { Coords } from '../types';
 import "./Board.css";
 
 const INITIAL_ROWS = 150;

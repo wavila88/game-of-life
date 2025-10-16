@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
-import type { ApiResponseDTO, Coords, GameOfLife } from "./types";
+import type { ApiResponseDTO, Coords, GameOfLife } from "../types";
+
 
 // Replace with your actual API endpoint
 const CREATE_BOARD_URL = "http://localhost:5082/GameOfLife/boards";
