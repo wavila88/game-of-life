@@ -25,8 +25,8 @@ namespace Api.Controllers
         /// </summary>
         /// <param name="initialState">La list of coords to create inital state.</param>
         [HttpPost("boards")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponseDTO<GameOfLife>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponseDTO<object>),StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateNewBoard([FromBody] IEnumerable<CoordsDTO> initialState)
         {
             try
@@ -59,8 +59,8 @@ namespace Api.Controllers
         }
 
         [HttpGet("boards/{boardId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponseDTO<GameOfLife>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponseDTO<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetBoard(Guid boardId)
         {
             try
@@ -80,10 +80,16 @@ namespace Api.Controllers
             }
         }
 
+
+
+
+        /// <summary>Get next generation in game of life</summary>
+        /// <response code="404">No board found with Id 1234</response>
+        /// <response code="409">Invalid Operation for one validation</response>
         [HttpPost("boards/next")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiResponseDTO<GameOfLife>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponseDTO<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponseDTO<object>), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> GetNextGenerations([FromBody] NextGenerationsRequestDTO request)
         {
             try

@@ -2,6 +2,7 @@ using Application.UseCases;
 using Domain.Repositories;
 using Domain.Services;
 using Infra.Repository;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,12 @@ builder.Services.AddScoped<IGameOfLifeUseCase, GameOfLifeUseCase>();
 builder.Services.AddScoped<IGameOfLifeService, GameOfLifeService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
+});
 
 // Add CORS policy
 builder.Services.AddCors(options =>
