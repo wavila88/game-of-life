@@ -4,6 +4,8 @@ import { useState, useEffect, type Dispatch, type SetStateAction, } from 'react'
 import type { ApiResponseDTO, Coords, GameOfLife, GameOfLifeState, RequestNextGenerations } from '../types';
 import useMutationCreateBoard from '../services/useMutationCreateBoard';
 import useMutationNextGenerations from '../services/useMutationNextGenerations';
+import { closeWebSocketConnection, isExpectedWebSocketError, onReceiveBoardState, sendNextGeneration } from '../websocket/nextGenerationPlay';
+import useMutationGetBoard from '../services/useMutationGetBoard';
 
 // Banner type
 export type BannerType = 'error' | 'success' | 'warning';
@@ -48,8 +50,8 @@ export function useGameOfLifeLogic({ aliveCells, setAliveCells }: UseGameOfLifeH
 
   const mutationCreateBoard = useMutationCreateBoard();
   const mutationNextGeneration = useMutationNextGenerations();
-  const mutationQueryBoard = useMutationCreateBoard();
-  const SET_INTERVAL_MS = 500;
+  const mutationQueryBoard = useMutationGetBoard();
+
 
   const onClose = () => setBanner({ ...banner, showModal: false });
 
@@ -63,7 +65,8 @@ export function useGameOfLifeLogic({ aliveCells, setAliveCells }: UseGameOfLifeH
 
   const coordsArrayToSet = (arr: Coords[]): Set<string> =>
     new Set(arr.map(({ x, y }) => `${x},${y}`));
-
+  
+  // Function to handle next generation logic
   const handleNextXGen = (gameOfLifeObj: GameOfLife) => {
     mutationNextGeneration.mutate(
       {
@@ -125,30 +128,52 @@ export function useGameOfLifeLogic({ aliveCells, setAliveCells }: UseGameOfLifeH
     }
   };
 
+  //register the WebSocket callback to receive board state updates
   const handleToggleAuto = () => setAutoMode((a) => !a);
-
   useEffect(() => {
-    let interval : any;
+    onReceiveBoardState((data: GameOfLife) => {
+      setAliveCells(coordsArrayToSet(data?.liveCells || []));
+      let nextGen: GameOfLife = { ...data, generation: data.generation + 1 } as GameOfLife;
+      setGameOfLife(nextGen);
+       setGameOfLifeState(prev => ({
+        ...prev,
+        currentGeneration: data?.generation || 0,
+      }));
+    });
+  }, []);
+
+  // When autoMode is activated, send the payload once via WebSocket
+  useEffect(() => {
     if (autoMode) {
-      interval = setInterval(() => {
-        if (gameOfLife) {
-          handleNextXGen({ ...gameOfLife, generation: 1 });
-        } else {
-          onNextGen({
-            initialState: setToCoordsArray(aliveCells),
-            generations: 1,
-          });
-        }
-      }, SET_INTERVAL_MS);
+      sendNextGenWithCatch();
+    } else {
+      closeWebSocketConnection();
     }
-    return () => interval && clearInterval(interval);
-  }, [autoMode, gameOfLife, aliveCells]);
+  }, [autoMode]);
 
+    // Función para enviar la generación por WebSocket y manejar errores
+  const sendNextGenWithCatch = async () => {
+    try {
+      await sendNextGeneration({
+        BoardId: gameOfLife?.id || '',
+        Generations: 1,
+        LiveCells: setToCoordsArray(aliveCells),
+      });
+    } catch (error: any) {
+      if (isExpectedWebSocketError(error)) return;
+      setBanner({
+        message: "An unexpected error occurred.",
+        showModal: true,
+        bannerType: 'error',
+        onClose: () => onClose()
+      });
+    }
+  };
+
+// Search board by ID
 const handleSearchBoard = async (boardId: string) => {
-
     const result = await mutationQueryBoard.mutateAsync(boardId)
     if (result.success) {
-      debugger;
       setGameOfLife(result.data || null);
       setAliveCells(coordsArrayToSet(result.data?.liveCells || []));
       setGameOfLifeState(prev => ({
@@ -180,3 +205,5 @@ const handleSearchBoard = async (boardId: string) => {
     onClose,
   };
 }
+
+

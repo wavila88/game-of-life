@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: .Dockerfile
-    image: back-game-of-life/backend:v1.1
+    image: back-game-of-life/backend:v3.0
     ports:
       - "8080:80"
+    environment:
+    - Redis__ConnectionString=host.docker.internal:6379
+    - GameOfLife__GenerationDelayMs=1000
+    - CORS__AllowedOrigins=http://localhost:5173,http://localhost:3000,http://host.docker.internal

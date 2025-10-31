@@ -2,12 +2,12 @@ import { useMutation } from "@tanstack/react-query";
 import type { ApiResponseDTO, GameOfLife, RequestApiNext } from "../types";
 
 // Replace with your actual API endpoint
-const CREATE_BOARD_URL = "http://localhost:5082/GameOfLife";
+const CREATE_BOARD_URL = `${import.meta.env.VITE_API_URL}/GameOfLife`;
 
 async function nextGeneration(payload: RequestApiNext): Promise<ApiResponseDTO<GameOfLife>> {
         const response = await fetch(`${CREATE_BOARD_URL}/boards/next`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
             credentials: 'include',
             body: JSON.stringify(payload),
         });

@@ -73,8 +73,7 @@ namespace Domain.Core
         }
 
         /*
-         * Time Complexity: O(X * k)
-         * Space Complexity: O(k)
+         * Space Complexity: O(X * k)
          * Where X = number of generations, k = average number of live cells per generation.
          * If you have 100 generations (X = 100) and 50 live cells (k = 50) per generation,
          * the complexity is about O(100 * 50) = O(5000) operations.

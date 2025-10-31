@@ -4,7 +4,7 @@ import  type {  ApiResponseDTO, GameOfLife } from "../types";
 
 
 // Replace with your actual API endpoint
-const CREATE_BOARD_URL = "http://localhost:5082/GameOfLife";
+const CREATE_BOARD_URL = `${import.meta.env.VITE_API_URL}/GameOfLife`;
 
 async function getBoard(boardId: string): Promise<ApiResponseDTO<GameOfLife>> {
         const response = await fetch(`${CREATE_BOARD_URL}/boards/${boardId}`, {

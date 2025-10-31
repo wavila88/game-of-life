@@ -1,12 +1,9 @@
 ﻿using Domain.Models;
 using Domain.Repositories;
+using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+
 
 namespace Infra.Repository
 {
@@ -14,10 +11,10 @@ namespace Infra.Repository
     {
         private readonly IDatabase _redisDb;
 
-        public GameOfLifeRepository()
+        // Inject the connection multiplexer
+        public GameOfLifeRepository(IConnectionMultiplexer redisConnection)
         {
-            var redis = ConnectionMultiplexer.Connect("localhost:6379");
-            _redisDb = redis.GetDatabase();
+            _redisDb = redisConnection.GetDatabase();
         }
 
         public async Task<GameOfLife> SaveGameOfLife(GameOfLife gameOfLife)

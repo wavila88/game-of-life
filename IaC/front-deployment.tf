@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "frontend" {
       spec {
         container {
           name  = "frontend"
-          image = "front-game-of-life:v1.0"
+          image = "front-game-of-life:v3.0"
           image_pull_policy = "Never"
 
           port {

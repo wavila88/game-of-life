@@ -1,16 +1,18 @@
+# Dockerfile
 # Etapa 1: build
-FROM node:20 AS builder
+FROM node:18 AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
-
 COPY . .
+
+ARG VITE_API_URL
+RUN echo "VITE_API_URL=$VITE_API_URL" > .env
+
+RUN npm install
 RUN npm run build
 
 # Etapa 2: production with nginx
 FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]

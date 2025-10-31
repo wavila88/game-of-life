@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using Api.DTO;
+using Domain.Models;
 using Domain.Repositories;
 using Domain.Services;
 using System;
@@ -34,6 +35,25 @@ namespace Application.UseCases
         public async Task<GameOfLife> NextGenerations(Guid id, int generations, List<Coords> LiveCells)
         {
             return await _service.GetNGerationsStateAsync(id, generations, LiveCells);
+        }
+
+        public async Task<GameOfLife> HandleHubNextGeneration(NextGenerationsHubRequestDTO nextGeneration)
+        {
+            if (string.IsNullOrEmpty(nextGeneration.BoardId))
+            {
+                return await _service.SaveGameOfLife(new GameOfLife()
+                {
+                    Id = Guid.NewGuid(),
+                    LiveCells = nextGeneration.LiveCells,
+                    isCycleDetected = false,
+                    Generation = 0,
+                });
+            }
+            else 
+            {
+                Guid boardId = Guid.Parse(nextGeneration.BoardId);
+                return await _service.GetNGerationsStateAsync(boardId, nextGeneration.Generations, nextGeneration.LiveCells);
+            }
         }
     }
 }

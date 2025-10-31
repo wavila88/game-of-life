@@ -60,11 +60,10 @@ resource "kubernetes_deployment" "app" {
       spec {
         container {
           name  = "back-container"
-         
           # CRITICAL: Tells Kubernetes to only use the local image (from Minikube's internal registry)
           image_pull_policy = "IfNotPresent" 
            # Custom image for your backend
-          image = "back-game-of-life/backend:v1.1" 
+          image = "back-game-of-life/backend:v3.0" 
           port {
             container_port = 80
           }

@@ -6,8 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://host.docker.internal:8080
-    image: front-game-of-life:v2.0
+        VITE_API_URL: http://localhost:8080
+    image: front-game-of-life:v3.0
     ports:
-      - "3000:80"
-    
+      - "80:80"

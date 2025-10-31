@@ -1,37 +1,37 @@
 # ==========================================================
-# STAGE 1: BUILD - Copia toda la solución y publica el proyecto ejecutable
+# STAGE 1: BUILD - Copies the entire solution and publishes the executable project
 # ==========================================================
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 
-# Copia los archivos de toda la solución al directorio de trabajo
+# Copies all solution files to the working directory
 COPY . . 
 
-# Restaura las dependencias de toda la solución
+# Restores dependencies for the entire solution
 RUN dotnet restore "back-game-of-life.sln"
 
-# Navega a la carpeta del proyecto ejecutable (asumimos 'Api' es el proyecto principal)
-# Si tu proyecto principal tiene otro nombre (por ejemplo, 'Infra' o 'Web'), cámbialo aquí.
+# Navigate to the executable project folder (assuming 'Api' is the main project)
+# If your main project has another name (e.g., 'Infra' or 'Web'), change it here.
 WORKDIR /src/Api
 
-# Publica la aplicación final a /app/publish
-# Usaremos el nombre del directorio del proyecto (Api) para la publicación, si el nombre de salida no se sobreescribe
+# Publish the final application to /app/publish
+# We will use the project directory name (Api) for publishing, unless the output name is overwritten
 RUN dotnet publish -c Release -o /app/publish
 
 # ==========================================================
-# STAGE 2: FINAL - Imagen de Runtime (más pequeña y segura)
+# STAGE 2: FINAL - Runtime image (smaller and safer)
 # ==========================================================
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS final
 WORKDIR /app
 
-# Fuerza la aplicación a escuchar en el Puerto 80 dentro del contenedor
+# Forces the application to listen on Port 80 inside the container
 ENV ASPNETCORE_URLS=http://+:80
 
-# Copia el resultado de la publicación de la etapa 'build'
+# Copies the publish result from the 'build' stage
 COPY --from=build /app/publish . 
 
-# Define el punto de entrada para ejecutar el archivo DLL principal.
-# ATENCIÓN: El nombre de la DLL DEBE coincidir con el nombre de tu proyecto ejecutable. 
-# Si tu proyecto en /Api se llama 'Api.csproj', el DLL será 'Api.dll'.
-# Si el nombre del proyecto fuera diferente, ajusta "Api.dll" aquí.
+# Defines the entry point to run the main DLL file.
+# ATTENTION: The DLL name MUST match your executable project name.
+# If your project in /Api is called 'Api.csproj', the DLL will be 'Api.dll'.
+# If the project name is different, adjust "Api.dll" here.
 ENTRYPOINT ["dotnet", "Api.dll"] 

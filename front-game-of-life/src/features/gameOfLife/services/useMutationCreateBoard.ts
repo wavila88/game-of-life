@@ -3,7 +3,7 @@ import type { ApiResponseDTO, Coords, GameOfLife } from "../types";
 
 
 // Replace with your actual API endpoint
-const CREATE_BOARD_URL = "http://localhost:5082/GameOfLife/boards";
+const CREATE_BOARD_URL = `${import.meta.env.VITE_API_URL}/GameOfLife/boards`;
 
 async function createBoard(payload: Coords[]): Promise<ApiResponseDTO<GameOfLife>> {
         const response = await fetch(CREATE_BOARD_URL, {

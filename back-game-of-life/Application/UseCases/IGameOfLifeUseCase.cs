@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using Api.DTO;
+using Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,5 +24,7 @@ namespace Application.UseCases
         /// Gets the state of a GameOfLife board after a number of generations.
         /// </summary>
         public Task<GameOfLife> NextGenerations(Guid id, int generations, List<Coords> LiveCells);
+
+        public Task<GameOfLife> HandleHubNextGeneration(NextGenerationsHubRequestDTO nextGeneration);
     }
 }
